@@ -66,6 +66,9 @@ class AnnotationReader implements LoggerAwareInterface, IAnnotationReader
     {
         if (!isset($this->namespaces)) {
             $this->namespaces = $this->nsParser->parseClass($this->class);
+            if ($this->logger) {
+                $this->logger->debug("Parsing {class}: Found namespaces {namespaces}", array("class" => $this->class->getName(), "namespaces" => $this->namespaces));
+            }
         }
         return $this->namespaces;
     }
@@ -80,11 +83,17 @@ class AnnotationReader implements LoggerAwareInterface, IAnnotationReader
         }
 
         $docblock = $this->class->getDocComment();
+        if ($this->logger) {
+            $this->logger->debug("Parsing {class}: Found doc comment {doccomment}", array("class" => $this->class->getName(), "doccomment" => $docblock));
+        }
 
         if ($docblock === false) {
             $this->classAnnotations = array();
         } else {
             $this->classAnnotations = $this->parser->parse($docblock, "class", $this->_getNamespaces());
+        }
+        if ($this->logger) {
+            $this->logger->debug("Parsing {class}: Found class annotations {annots}", array("class" => $this->class->getName(), "annots" => $this->classAnnotations));
         }
         return $this->classAnnotations;
     }
@@ -136,6 +145,10 @@ class AnnotationReader implements LoggerAwareInterface, IAnnotationReader
         $dClass = $rThing->getDeclaringClass();
 
         if ($dClass != $this->class) {
+            if ($this->logger) {
+                $this->logger->debug("Parsing {class}: I reckon {thing} is declared on {dclass}",
+                    array("class" => $this->class->getName(), "thing" => $rThing->getName(), "dclass" => $dClass->getName()));
+            }
             $fullName = $dClass->getNamespaceName() . '\\' . $dClass->getName();
             if (!isset($this->otherNamespaces[$fullName])) {
                 $this->otherNamespaces[$fullName] = $this->nsParser->parseClass($dClass);
@@ -158,11 +171,19 @@ class AnnotationReader implements LoggerAwareInterface, IAnnotationReader
         $this->methodAnnotations[$method] = array();
         $rMethod = $this->class->getMethod($method);
         $docblock = $rMethod->getDocComment();
+        if ($this->logger) {
+            $this->logger->debug("Parsing {class}: Method {method} has docblock: {docblock}",
+                array("class" => $this->class->getName(), "method" => $method, "docblock" => $docblock));
+        }
         if ($docblock !== false) {
             $this->methodAnnotations[$method] = $this->parser->parse($docblock,
                 "method",
                 $this->_getDeclaredNamespaces($rMethod)
             );
+        }
+        if ($this->logger) {
+            $this->logger->debug("Parsing {class}: Method {method} has annotations: {annot}",
+                array("class" => $this->class->getName(), "method" => $method, "annot" => $this->methodAnnotations[$method]));
         }
         return $this->methodAnnotations[$method];
 
@@ -203,11 +224,19 @@ class AnnotationReader implements LoggerAwareInterface, IAnnotationReader
         $this->propertyAnnotations[$property] = array();
         $rProperty = $this->class->getProperty($property);
         $docblock = $rProperty->getDocComment();
+        if ($this->logger) {
+            $this->logger->debug("Parsing {class}: Property {property} has docblock: {docblock}",
+                array("class" => $this->class->getName(), "property" => $property, "docblock" => $docblock));
+        }
         if ($docblock !== false) {
             $this->propertyAnnotations[$property] = $this->parser->parse($docblock,
                 "property",
                 $this->_getDeclaredNamespaces($rProperty)
             );
+        }
+        if ($this->logger) {
+            $this->logger->debug("Parsing {class}: Property {property} has annotations: {annot}",
+                array("class" => $this->class->getName(), "property" => $property, "annot" => $this->propertyAnnotations[$property]));
         }
         return $this->propertyAnnotations[$property];
 

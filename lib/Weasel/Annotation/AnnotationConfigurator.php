@@ -75,6 +75,10 @@ class AnnotationConfigurator implements AnnotationConfigProvider, LoggerAwareInt
             return self::$builtIns->getAnnotation($name);
         }
 
+        if (!class_exists($name)) {
+            return null;
+        }
+
         $class = new \ReflectionClass($name);
         $reader = $this->readerFactory->getReaderForClass($class);
 
